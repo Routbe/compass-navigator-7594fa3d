@@ -13,8 +13,10 @@ export function describeErrorForLog(error: unknown): { name: string; message: st
   if (error instanceof Error) {
     return {
       name: error.name,
-      message: maskEmailsInText(error.message).slice(0, 500),
-      ...(error.stack ? { stack: maskEmailsInText(error.stack).slice(0, 2000) } : {}),
+      // Arbitrary provider messages can echo names, messages and credentials.
+      // Preserve call-site diagnostics, never the untrusted message itself.
+      message: "Operation failed (provider details omitted)",
+      ...(error.stack ? { stack: maskEmailsInText(error.stack.split("\n").filter(line => /^\s+at /.test(line)).join("\n")).slice(0, 2000) } : {}),
     };
   }
   return { name: "NonError", message: "(non-error value thrown)" };

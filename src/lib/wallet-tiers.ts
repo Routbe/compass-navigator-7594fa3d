@@ -11,7 +11,7 @@ export const WALLET_TOPUP_TIERS_CENTS = [1000, 2500, 5000, 10000, 25000] as cons
 export type WalletTopupCents = (typeof WALLET_TOPUP_TIERS_CENTS)[number];
 
 export const WALLET_TOPUP_MIN_CENTS = WALLET_TOPUP_TIERS_CENTS[0];
-export const WALLET_TOPUP_MAX_CENTS = WALLET_TOPUP_TIERS_CENTS[WALLET_TOPUP_TIERS_CENTS.length - 1]!;
+export const WALLET_TOPUP_MAX_CENTS = WALLET_TOPUP_TIERS_CENTS[4];
 export const WALLET_TOPUP_CURRENCY = "eur";
 
 export function isWalletTopupTier(value: unknown): value is WalletTopupCents {

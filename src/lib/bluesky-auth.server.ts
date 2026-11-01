@@ -340,18 +340,10 @@ export async function startBlueskyLogin(input: {
     nonce = par.nonce;
     const uri = par.body?.["request_uri"];
     if (!par.res.ok || typeof uri !== "string") {
-      const reason =
-        (par.body?.["error_description"] as string | undefined) ||
-        (par.body?.["error"] as string | undefined) ||
-        `HTTP ${par.res.status}`;
       console.error("[bluesky] PAR rejected", {
         status: par.res.status,
-        body: par.body,
-        client_id: blueskyClientId(input.origin),
-        redirect_uri: blueskyRedirectUri(input.origin),
-        endpoint: meta.pushed_authorization_request_endpoint,
       });
-      throw new BlueskyAuthError(`Bluesky weigerde de inlogaanvraag (${reason}).`);
+      throw new BlueskyAuthError("Er is een tijdelijk verbindingsprobleem opgetreden.");
     }
     requestUri = uri;
   }
@@ -394,17 +386,10 @@ export async function completeBlueskyLogin(input: {
   const token = await dpopPost(key, input.state.tokenEndpoint, body, input.state.nonce);
   const sub = token.body?.["sub"];
   if (!token.res.ok || typeof sub !== "string") {
-    const reason =
-      (token.body?.["error_description"] as string | undefined) ||
-      (token.body?.["error"] as string | undefined) ||
-      `HTTP ${token.res.status}`;
     console.error("[bluesky] token exchange failed", {
       status: token.res.status,
-      body: token.body,
-      client_id: blueskyClientId(input.origin),
-      redirect_uri: blueskyRedirectUri(input.origin),
     });
-    throw new BlueskyAuthError(`Bluesky kon de aanmelding niet afronden (${reason}).`);
+    throw new BlueskyAuthError("Er is een tijdelijk verbindingsprobleem opgetreden.");
   }
   if (sub !== input.state.did) {
     throw new BlueskyAuthError("Er is ingelogd met een ander Bluesky-account dan gevraagd.");

@@ -9,6 +9,7 @@
 
 import { AsyncLocalStorage } from "node:async_hooks";
 import { contextStatements, type DbContext } from "@/lib/db-context";
+import { GENERIC_TEMPORARY_ERROR } from "@/lib/security/safe-errors";
 
 /**
  * Request-scoped RLS context. Auth middleware runs handlers inside
@@ -82,11 +83,15 @@ async function post(body: unknown): Promise<any> {
     /* non-JSON body */
   }
   if (!res.ok) {
-    const err = new Error(`Neon ${res.status}${json?.code ? ` ${json.code}` : ""}: ${json?.message ?? text.slice(0, 300)}`) as Error & {
+    // Provider text may echo SQL values, names or message contents. Keep only
+    // the status and allowlisted SQLSTATE for diagnostics and retry decisions.
+    const code = typeof json?.code === "string" && /^[A-Z0-9]{5}$/.test(json.code) ? json.code : undefined;
+    console.error("[database] request failed", { status: res.status, code });
+    const err = new Error(GENERIC_TEMPORARY_ERROR) as Error & {
       code?: string;
       status?: number;
     };
-    err.code = json?.code;
+    err.code = code;
     err.status = res.status;
     throw err;
   }

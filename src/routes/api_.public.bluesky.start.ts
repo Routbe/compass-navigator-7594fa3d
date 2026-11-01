@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 const STATE_COOKIE = "rout_bsky_state";
 import { linkIntentCookie } from "@/lib/link-intent";
+import { configuredAuthOrigin } from "@/lib/auth-origin";
 
 /** Stap 1 van de Bluesky-login: stuur het lid door naar zijn eigen server. */
 export const Route = createFileRoute("/api_/public/bluesky/start")({
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/api_/public/bluesky/start")({
         const { canonicalAppUrl, isApprovedHost } = await import("@/lib/app-url");
         const host = request.headers.get("host") ?? "";
         const origin =
-          process.env["NEXT_PUBLIC_APP_URL"]?.replace(/\/$/, "") ||
+          configuredAuthOrigin(process.env) ||
           (isApprovedHost(host) && !host.startsWith("localhost")
             ? `https://${host}`
             : canonicalAppUrl());

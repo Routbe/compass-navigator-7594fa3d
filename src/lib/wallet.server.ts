@@ -87,7 +87,8 @@ export async function setAutoTopup(
   enabled: boolean,
   amountCents: number,
 ): Promise<void> {
-  const amount = Math.min(Math.max(Math.round(amountCents), MIN_TOPUP_CENTS), MAX_TOPUP_CENTS);
+  if (!isWalletTopupTier(amountCents)) throw new Error("invalid_topup_amount");
+  const amount = amountCents;
   await ensureWallet(userId);
   await sql`
     update public.wallets
@@ -109,6 +110,7 @@ export async function creditWallet(opts: {
   description?: string | null;
   reference?: string | null;
 }): Promise<boolean> {
+  if ((opts.kind ?? "topup") === "topup" && !isWalletTopupTier(opts.amountCents)) return false;
   const amount = Math.max(0, Math.round(opts.amountCents));
   if (!amount) return false;
   await ensureWallet(opts.userId);
@@ -230,11 +232,12 @@ export async function startWalletTopup(opts: {
   amountCents: number;
   origin: string;
 }): Promise<{ ok: true; url: string } | { ok: false; reason: string }> {
+  if (!isWalletTopupTier(opts.amountCents)) return { ok: false, reason: "invalid_topup_amount" };
   const { stripeKey } = await import("./verification.server");
   const key = stripeKey();
   if (!key) return { ok: false, reason: "stripe_not_configured" };
 
-  const amount = Math.min(Math.max(Math.round(opts.amountCents), MIN_TOPUP_CENTS), MAX_TOPUP_CENTS);
+  const amount = opts.amountCents;
   const origin = opts.origin.replace(/\/$/, "");
   const body = new URLSearchParams({
     mode: "payment",
@@ -265,10 +268,12 @@ export async function startWalletTopup(opts: {
     });
     const json = (await res.json()) as { url?: string; error?: { message?: string } };
     if (!res.ok || !json.url) {
-      return { ok: false, reason: json.error?.message ?? `HTTP ${res.status}` };
+      console.error("[wallet] checkout provider rejected", { status: res.status });
+      return { ok: false, reason: "Er is een tijdelijk verbindingsprobleem opgetreden." };
     }
     return { ok: true, url: json.url };
   } catch (error) {
-    return { ok: false, reason: error instanceof Error ? error.message : "stripe_failed" };
+    console.error("[wallet] checkout connection failed");
+    return { ok: false, reason: "Er is een tijdelijk verbindingsprobleem opgetreden." };
   }
 }

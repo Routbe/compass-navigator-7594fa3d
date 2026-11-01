@@ -10,6 +10,8 @@ import { betterAuthDatabase } from "@/lib/neon-kysely.server";
 import { APP_DOMAINS } from "@/lib/app-domains";
 import { canonicalAppUrl, isApprovedHost } from "@/lib/app-url";
 import { EXPLICIT_ACCOUNT_LINKING } from "@/lib/identity/link-rules";
+import { AUTH_COOKIE_ATTRIBUTES, configuredAuthOrigin } from "@/lib/auth-origin";
+import { logServerError } from "@/lib/security/safe-errors";
 
 /**
  * Self-hosted Better Auth — ROUT's own identity layer (System A).
@@ -93,8 +95,10 @@ function requestOrigin(request?: Request): string | null {
 
 /** The base URL OAuth callbacks are built on: the approved request host first, else configured, else canonical. */
 function baseUrlFor(request?: Request): string {
-  const configured = env("BETTER_AUTH_URL") ?? env("NEXT_PUBLIC_APP_URL");
+  const configured = configuredAuthOrigin(process.env);
   const origin = requestOrigin(request);
+  // Explicit deployment configuration outranks proxy headers and stale aliases.
+  if (configured) return configured;
   // The state cookie is set on the request host; returning to a different
   // configured host loses it → state_mismatch. Follow the live host instead.
   if (origin && isApprovedHost(new URL(origin).host)) return origin;
@@ -116,7 +120,7 @@ export { baseUrlFor as authBaseUrlFor };
 
 /** Canonical https origin (no trailing slash) the OAuth providers are registered on. */
 export function canonicalAuthOrigin(): string {
-  const raw = (env("BETTER_AUTH_URL") ?? env("NEXT_PUBLIC_APP_URL") ?? canonicalAppUrl()).trim();
+  const raw = (configuredAuthOrigin(process.env) ?? canonicalAppUrl()).trim();
   const base = raw.replace(/\/+$/, "").replace(/\/api\/auth$/, "");
   const url = new URL(/^https?:\/\//.test(base) ? base : `https://${base}`);
   const local = /^(localhost|127\.0\.0\.1)$/.test(url.hostname);
@@ -182,7 +186,7 @@ export function createRoutAuth(request?: Request) {
             if (draft) await upsertTourDraft(email, draft);
           }
         } catch (err) {
-          console.error("[auth] draft link at magic-link send failed", err);
+          logServerError("auth-draft-link", err);
         }
         // Alleen de centrale dienst: taal uit cookie/browser, nooit blokkerend of gooiend.
         const { sendLocalizedEmail, localeFromRequest } = await import("@/lib/email.server");
@@ -210,7 +214,7 @@ export function createRoutAuth(request?: Request) {
   } else if (!oidc && !discoveryUrl) {
     // Discover on the live (approved) request host so dev/preview never call a dead port.
     const live = requestOrigin(request);
-    const issuerBase = live && isApprovedHost(new URL(live).host) ? live : canonicalAppUrl();
+    const issuerBase = baseUrlFor(request);
     genericConfigs.push({
       providerId: "oidc",
       discoveryUrl: `${issuerBase}/.well-known/openid-configuration`,
@@ -285,7 +289,7 @@ export function createRoutAuth(request?: Request) {
   }
   if (genericConfigs.length) plugins.push(genericOAuth({ config: genericConfigs as never }));
 
-  const origin = requestOrigin(request);
+  const origin = baseUrlFor(request);
 
   // Echte 2FA (TOTP, ook voor accounts zonder wachtwoord) en passkeys (WebAuthn).
   plugins.push(
@@ -373,7 +377,7 @@ export function createRoutAuth(request?: Request) {
       // Both split deployments (rout.be public, rout.dlp.li admin) + configured base.
       "https://rout.dlp.li",
       "https://www.rout.be",
-      ...[env("BETTER_AUTH_URL"), env("NEXT_PUBLIC_APP_URL")].flatMap((u) => {
+      ...[configuredAuthOrigin(process.env)].flatMap((u) => {
         try {
           return u ? [new URL(/^https?:\/\//.test(u.trim()) ? u.trim() : `https://${u.trim()}`).origin] : [];
         } catch {
@@ -387,7 +391,7 @@ export function createRoutAuth(request?: Request) {
       // internal hop says http; browsers accept secure cookies on localhost.
       useSecureCookies: true,
       // lax lets the top-level OAuth redirect back carry the state cookie.
-      defaultCookieAttributes: { httpOnly: true, secure: true, sameSite: "lax", path: "/" },
+      defaultCookieAttributes: AUTH_COOKIE_ATTRIBUTES,
       ipAddress: { ipAddressHeaders: ["x-forwarded-for", "x-real-ip", "cf-connecting-ip"] },
       database: { generateId: () => crypto.randomUUID() },
     },
@@ -456,7 +460,7 @@ export function authDiagnostics(request?: Request) {
   const core = {
     DATABASE_URL: hasDatabase(),
     BETTER_AUTH_SECRET: Boolean(resolved),
-    BETTER_AUTH_URL: Boolean(env("BETTER_AUTH_URL") ?? env("NEXT_PUBLIC_APP_URL")),
+    BETTER_AUTH_URL: Boolean(configuredAuthOrigin(process.env)),
   };
   const providers = Object.entries(PROVIDER_KEYS).map(([id, keys]) => {
     const missing = keys.filter((k) => !envAny(k));

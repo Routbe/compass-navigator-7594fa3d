@@ -5,12 +5,17 @@
 1. Import the GitHub repo in Vercel. Framework preset: **Other**. Use the committed `vercel.json`: build command **`bun run build:vercel`**, output directory unset. The build validates core settings before compiling; `VERCEL=1` explicitly selects the Nitro Vercel preset. Lovable keeps its managed preview target. Verify `.vercel/output/config.json` in the Vercel build before promoting a release; a Vercel deployment has not been verified here.
 2. Paste every variable from *Required on Vercel* below, plus the optional groups you use, in Vercel → Settings → Environment Variables (Production and Preview).
 3. Review pending `db/NNNN_*.sql` migrations separately. Never run owner-level migrations automatically in a Vercel build. Use the Neon gateway migration workflow or the Neon SQL editor after reviewing the exact statements; then run `bun run db:check` using gateway credentials (schema drift against `db/schema.snapshot.json`). Never apply these scripts to Lovable Cloud.
-4. Point each OAuth provider's callback to `<BETTER_AUTH_URL>/api/auth/callback/<provider>`.
+4. Point each OAuth provider's callback to `<PUBLIC_ORIGIN>/api/auth/callback/<provider>` (using the normalized HTTPS origin).
 5. The committed daily cron calls `/api/public/cron/cleanup-assets`. Configure **`CRON_SECRET`** in Vercel: Vercel sends it as a bearer token. `LOVABLE_CRON_SECRET` is the handler's fallback for other schedulers. Other queues, including outbound webhooks and audit checkpoints, need their own reviewed schedules; the daily cleanup does not deliver webhooks.
 
 `NODE_ENV` is set by Vercel; never set it yourself.
 
-## Required on Vercel
+## Required for release validation
+
+- `DATABASE_URL` — Required by the release check; this does not change the existing runtime transport.
+- `PUBLIC_ORIGIN` — Canonical authentication origin. Valid HTTPS URLs are normalized to their origin, including URLs with trailing slashes or paths. Invalid formatting warns rather than blocking compilation.
+
+## Additional runtime requirements (not build gates)
 
 - `LOVABLE_API_KEY` — Server-only Lovable connector gateway credential. Configure securely in Vercel; never prefix it with `VITE_`.
 - `NEON_API_KEY` — Server-only key of the linked Neon connection. The stored connection must use the least-privilege `rout_app` role. This is a Lovable connection key, not a Neon management API key.
@@ -18,7 +23,7 @@
 - `BETTER_AUTH_URL` — Public base URL, e.g. https://rout.be (no trailing slash).
 - `NEXT_PUBLIC_APP_URL` — Same public URL; used for auth callbacks and links in emails.
 - `PUBLIC_SITE_URL` — Public URL used in share links and metadata.
-- `PUBLIC_ORIGIN` — Allowed origin for requests, normally the same URL.
+- `PUBLIC_ORIGIN` takes precedence over legacy authentication URL aliases for callbacks, trusted origins and passkeys. Cookies remain Secure, HttpOnly, SameSite=Lax and host-only.
 
 ## Database (not on Vercel)
 
@@ -29,7 +34,7 @@
 
 Run `bun run release:check` in a secure environment with the intended deployment settings. It prints only missing setting names and configuration errors, never values. Run `bun run test -- --maxWorkers=2` and `bunx tsgo --noEmit` before release. Required setting presence is not evidence that credentials work.
 
-All four core URLs must be the same HTTPS origin without a path or trailing slash. Use your actual public domain; register its callbacks with each enabled provider. Keep signing/encryption keys stable when deployments share a database. Use a separate isolated database and matching keys for an independent preview environment.
+The release validator requires only DATABASE_URL and PUBLIC_ORIGIN. Runtime gateway credentials remain necessary for this connected database: passing the release check alone does not make this an autonomous direct-Postgres deployment. Use your actual HTTPS domain and register its callbacks with each enabled provider. Keep signing/encryption keys stable when deployments share a database. Use a separate isolated database and matching keys for an independent preview environment.
 
 ### Known release blockers
 

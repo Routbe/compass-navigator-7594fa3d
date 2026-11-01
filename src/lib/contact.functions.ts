@@ -83,7 +83,7 @@ export const submitContactMessage = createServerFn({ method: "POST" })
         },
       );
       if (rateError) {
-        console.error("[contact] rate-limit lookup failed:", rateError.message);
+        console.error("[contact] rate-limit lookup failed");
       } else if ((recent ?? 0) >= 5) {
         return { ok: false, reason: "rate_limited" };
       }
@@ -119,7 +119,7 @@ export const submitContactMessage = createServerFn({ method: "POST" })
       .single();
 
     if (insertError) {
-      console.error("[contact] db insert failed:", insertError.message);
+      console.error("[contact] db insert failed");
     } else {
       console.info(`[contact] db insert ok id=${row?.id ?? "unknown"} locale=${data.locale}`);
     }
@@ -136,18 +136,16 @@ export const submitContactMessage = createServerFn({ method: "POST" })
         delivered.admin = true;
         console.info("[contact] brevo admin notification sent");
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        console.error("[contact] brevo admin notification FAILED:", message);
-        failures.push(`admin: ${message}`);
+        console.error("[contact] brevo admin notification FAILED");
+        failures.push("admin: delivery_failed");
       }
       try {
         await server.sendVisitorAutoReply(payload);
         delivered.autoReply = true;
         console.info(`[contact] brevo auto-reply sent locale=${data.locale}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        console.error("[contact] brevo auto-reply FAILED:", message);
-        failures.push(`auto-reply: ${message}`);
+        console.error("[contact] brevo auto-reply FAILED");
+        failures.push("auto-reply: delivery_failed");
       }
     } else {
       console.warn("[contact] step 2/3 brevo SKIPPED: BREVO_API_KEY missing");
@@ -163,9 +161,8 @@ export const submitContactMessage = createServerFn({ method: "POST" })
         delivered.kchat = true;
         console.info("[contact] kchat notification sent");
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        console.error("[contact] kchat webhook FAILED:", message);
-        failures.push(`kchat: ${message}`);
+        console.error("[contact] kchat webhook FAILED");
+        failures.push("kchat: delivery_failed");
       }
     } else {
       console.warn("[contact] step 3/3 kchat SKIPPED: KCHAT_WEBHOOK_URL missing");
@@ -190,7 +187,7 @@ export const submitContactMessage = createServerFn({ method: "POST" })
         })
         .eq("id", row.id);
       if (updateError) {
-        console.error("[contact] status update failed:", updateError.message);
+        console.error("[contact] status update failed");
       }
     }
 

@@ -457,10 +457,9 @@ export async function liveAuthChecks() {
       }
     : null;
   const database = Boolean(checks && Object.values(checks).every((c) => c.ok));
-  const databaseError = checks ? (Object.entries(checks).find(([, c]) => !c.ok)?.map(String).join(":") ?? null) : "no_database_configured";
   return {
     database,
-    databaseError: checks ? (Object.entries(checks).filter(([, c]) => !c.ok).map(([k, c]) => `${k}:${c.code}`).join(",") || null) : databaseError,
+    databaseError: checks ? (Object.entries(checks).filter(([, c]) => !c.ok).map(([k, c]) => `${k}:${c.code}`).join(",") || null) : "no_database_configured",
     checks,
     databaseTransport: databaseTransport(),
     emailService: Boolean(env("BREVO_API_KEY")),

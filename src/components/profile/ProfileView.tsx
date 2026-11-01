@@ -455,6 +455,10 @@ export function ProfileView({
           {profile.username && <ConnectedApps handle={profile.username} compact />}
         </h1>
         {profile.username && <ProfilePageTabs handle={profile.username} theme={t} />}
+        {profile.fediverse && <a href={profile.fediverse.url} rel="me noopener noreferrer" target="_blank" className="mt-2 inline-flex max-w-full items-center gap-1.5 text-sm text-foreground">
+          <span className="truncate">Mastodon</span>
+          {profile.fediverse.verified && <BadgeCheck className="h-4 w-4 shrink-0 text-primary" aria-label="Mastodon-eigendom geverifieerd" />}
+        </a>}
         {profile.username && <SnapchatProfile handle={profile.username} theme={t} buttonStyle={styleFor("live")} ownerName={profile.display_name || profile.username} />}
         {profile.username && <CustomStatusPill handle={profile.username} theme={t} />}
         {profile.username && <NowPlaying handle={profile.username} theme={t} />}

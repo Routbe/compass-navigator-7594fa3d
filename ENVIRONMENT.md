@@ -12,34 +12,33 @@
 
 ## Required for release validation
 
-- `DATABASE_URL` — Required by the release check; this does not change the existing runtime transport.
+- `DATABASE_URL` — Server-only Neon PostgreSQL URL, read at request time when gateway credentials are absent. Configure it in Vercel Production (and Preview when used), then redeploy; a build-only variable cannot supply a running server.
 - `PUBLIC_ORIGIN` — Canonical authentication origin. Valid HTTPS URLs are normalized to their origin, including URLs with trailing slashes or paths. Invalid formatting warns rather than blocking compilation.
 
 ## Additional runtime requirements (not build gates)
 
-- `LOVABLE_API_KEY` — Server-only Lovable connector gateway credential. Configure securely in Vercel; never prefix it with `VITE_`.
-- `NEON_API_KEY` — Server-only key of the linked Neon connection. The stored connection must use the least-privilege `rout_app` role. This is a Lovable connection key, not a Neon management API key.
+- `LOVABLE_API_KEY` / `NEON_API_KEY` — Optional linked-gateway transport (preferred when both exist), not required for DATABASE_URL deployments. Never prefix secrets with `VITE_`.
 - `BETTER_AUTH_SECRET` — Signs sessions. 32+ random characters, identical on every deploy (changing it signs everyone out).
 - `BETTER_AUTH_URL` — Public base URL, e.g. https://rout.be (no trailing slash).
 - `NEXT_PUBLIC_APP_URL` — Same public URL; used for auth callbacks and links in emails.
 - `PUBLIC_SITE_URL` — Public URL used in share links and metadata.
 - `PUBLIC_ORIGIN` takes precedence over legacy authentication URL aliases for callbacks, trusted origins and passkeys. Cookies remain Secure, HttpOnly, SameSite=Lax and host-only.
 
-## Database (not on Vercel)
+## Database at runtime
 
-- `DATABASE_URL` is **not used by this application's runtime**. Setting it in Vercel does not activate database access. Runtime statements use the linked Neon gateway and reject owner connections.
+- Both database transports, Better Auth sessions, and ALTCHA replay checks use the same atomic adapter. Every batch switches to `rout_app`, sets transaction-local caller context, and verifies the role is neither owner, superuser, nor RLS-bypassing. The database must contain the reviewed schema and grant the runtime login permission to use `rout_app`; code never invents missing credentials or bypasses this guard.
 - `MIGRATION_URL` — Legacy local migration tooling only; not a runtime credential and not needed on Vercel. Prefer the reviewed gateway/Neon SQL editor workflow.
 
 ## Release verification
 
 Run `bun run release:check` in a secure environment with the intended deployment settings. It prints only missing setting names and configuration errors, never values. Run `bun run test -- --maxWorkers=2` and `bunx tsgo --noEmit` before release. Required setting presence is not evidence that credentials work.
 
-The release validator requires only DATABASE_URL and PUBLIC_ORIGIN. Runtime gateway credentials remain necessary for this connected database: passing the release check alone does not make this an autonomous direct-Postgres deployment. Use your actual HTTPS domain and register its callbacks with each enabled provider. Keep signing/encryption keys stable when deployments share a database. Use a separate isolated database and matching keys for an independent preview environment.
+The release validator requires only DATABASE_URL and PUBLIC_ORIGIN. The runtime reads credentials lazily; passing a release check is not evidence of database reachability. Use your actual HTTPS domain and register its callbacks with each enabled provider. Keep signing/encryption keys stable when deployments share a database. Use a separate isolated database and matching keys for an independent preview environment.
 
 ### Known release blockers
 
 - The current linked Neon connection uses an owner role and is rejected; link a `rout_app` connection before testing authenticated flows.
-- Better Auth currently receives `GatewayPool`. Its interactive transaction interface is explicitly unsupported. A supported gateway-compatible adapter and real signup/sign-in/callback tests are required before declaring authentication release-ready. Do not fake `BEGIN`/`COMMIT` success or replace the gateway with a direct connection.
+- Better Auth uses the shared Kysely atomic adapter with interactive transactions disabled. Real signup/sign-in/callback tests on Vercel are required before declaring authentication release-ready; never fake `BEGIN`/`COMMIT` success.
 - Storage, mail delivery, payments, Wallet signatures and provider callbacks require real credentials and an end-to-end check on the deployed domain.
 - The Vercel account, domain/DNS, production secret values and deployed build output have not been inspected here.
 

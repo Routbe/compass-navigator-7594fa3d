@@ -5,6 +5,9 @@ import { HostProfile } from "@/components/imported-pages/HostProfile";
 import { getRequestLocale } from "@/lib/locale.functions";
 import { resolveHostProfile } from "@/lib/domain-routing.functions";
 import { OG_IMAGE, canonicalLinks, jsonLdScript, socialMeta } from "@/lib/social-meta";
+import { getPublicProfileByHandle } from "@/lib/studio-profile.functions";
+import { fediverseHeadLinks, type FediverseIdentity } from "@/lib/fediverse-profile";
+import { profileSocialMeta } from "@/lib/social-meta";
 
 export const Route = createFileRoute("/")({
   loader: async () => {
@@ -12,11 +15,12 @@ export const Route = createFileRoute("/")({
       getRequestLocale().catch(() => ({ locale: "en" as const })),
       resolveHostProfile().catch(() => ({ handle: null as string | null })),
     ]);
-    return { ...locale, hostHandle: host.handle };
+    const hostProfile = host.handle ? await getPublicProfileByHandle({ data: { handle: host.handle } }).catch(() => null) : null;
+    return { ...locale, hostHandle: host.handle, hostProfile };
   },
   head: ({ loaderData }) => ({
-    meta: socialMeta(loaderData?.locale ?? "en", pageCardImage("home", loaderData?.locale ?? "en")),
-    links: canonicalLinks("/"),
+    meta: loaderData?.hostProfile ? profileSocialMeta({ locale: loaderData.locale, handle: loaderData.hostHandle ?? "", displayName: loaderData.hostProfile["display_name"] as string | null, bio: loaderData.hostProfile["bio"] as string | null, avatarUrl: loaderData.hostProfile["avatar_url"] as string | null, url: "/" }) : socialMeta(loaderData?.locale ?? "en", pageCardImage("home", loaderData?.locale ?? "en")),
+    links: [...canonicalLinks("/"), ...fediverseHeadLinks(loaderData?.hostProfile?.["fediverse"] as FediverseIdentity | null)],
     scripts: jsonLdScript({
       "@context": "https://schema.org",
       "@type": "WebSite",

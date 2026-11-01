@@ -18,6 +18,7 @@ import { canonicalLinks, profileJsonLd, profileSocialMeta, socialMeta } from "@/
 import type { Locale } from "@/lib/i18n";
 import { parseDisplayPrefs, bioForLocale } from "@/lib/profile-display";
 import { useRecordVisit } from "@/hooks/useRecordVisit";
+import { fediverseHeadLinks, type FediverseIdentity } from "@/lib/fediverse-profile";
 
 type Row = Record<string, unknown> | null;
 
@@ -145,7 +146,7 @@ export const Route = createFileRoute("/$username")({
     const url = `https://rout.be/${slug}`;
     if (!profile) return { meta: socialMeta(locale), links: canonicalLinks(`/${slug}`) };
     return {
-      links: canonicalLinks(`/${slug}`),
+      links: [...canonicalLinks(`/${slug}`), ...fediverseHeadLinks(profile["fediverse"] as FediverseIdentity | null)],
       scripts:
         profile["status"] === "frozen"
           ? []

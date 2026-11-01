@@ -8,3 +8,9 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Repository import architecture
+- Preserve the imported TanStack Start routes, source design system, MDX catalog, and server entry together; they form the existing application.
+- Keep Neon gateway and Better Auth as the imported account architecture; do not apply source database scripts automatically or substitute unrelated storage.
+- Preserve this project’s managed identity, credentials, and repository metadata during source imports.
+- Subdirectories have their own AGENTS.md to read before changing files there.

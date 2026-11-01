@@ -1,5 +1,11 @@
 # Production and security fixes
 
+## Design restoration and support triage
+- [ ] Compare the requested earlier repository and restore its presentation without reverting security/authentication fixes.
+- [ ] Diagnose and repair image loading; restore payment brand artwork and header details.
+- [ ] Add permission-protected AI contact summary and categorization in the existing support environment.
+- [ ] Run relevant tests and verify the visible changes; report any unavailable authenticated checks.
+
 ## Runtime and Fediverse verification
 - [x] Bind DATABASE_URL at request time to the shared, least-privilege database adapter; keep the linked gateway available.
 - [x] Verify database/authentication transport tests before implementing Fediverse changes.

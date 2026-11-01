@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ sql: vi.fn(), validate: vi.fn() }));
 vi.mock("@/lib/neon", () => ({ sql: mocks.sql }));
 vi.mock("@/lib/security/ssrf-guard.server", () => ({ validateOutboundUrl: mocks.validate }));
-import { saveFediverseProfile } from "@/lib/fediverse-profile.server";
+import { readFediverseProfile, saveFediverseProfile } from "@/lib/fediverse-profile.server";
 afterEach(() => { vi.clearAllMocks(); vi.unstubAllGlobals(); });
 function setup() {
   mocks.sql.mockImplementation(async (parts: TemplateStringsArray) => {
@@ -32,4 +32,9 @@ it("unsafe destinations cannot establish proof", async () => {
 it("unverified callers cannot write or make outbound requests", async () => {
   await expect(saveFediverseProfile({ id: "three", emailConfirmedAt: null }, "@user@instance.domain")).rejects.toMatchObject({ statusCode: 403 });
   expect(mocks.sql).not.toHaveBeenCalled();
+});
+it("public reads reject stale ownership bindings and expose no private data", async () => {
+  mocks.sql.mockResolvedValue([{ handle: "https://instance.domain/@user", verified: true, verified_at: new Date().toISOString(), verify_code: "relme:old-domain", urls: ["https://rout.be/@gebruiker"] }]);
+  expect(await readFediverseProfile("owner")).toEqual({ url: "https://instance.domain/@user", verified: false });
+  expect(mocks.sql.mock.calls[0]?.[0].join("")).toContain("read_public_fediverse");
 });

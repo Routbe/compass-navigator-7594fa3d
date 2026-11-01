@@ -11,7 +11,7 @@ async function binding(userId: string) {
   if (!row?.email_confirmed_at || !row.username) return null;
   const handle = String(row.username);
   const urls = [`https://rout.be/@${handle}`, `https://rout.be/${handle}`];
-  const subdomain = activeSubdomainFor({ username: handle, alias: row.subdomain_alias, tier: (row.subdomain_tier ?? "free") as SubdomainTier, rootStatus: row.root_subdomain_status ?? "none" });
+  const subdomain = activeSubdomainFor({ username: handle, alias: typeof row.subdomain_alias === "string" ? row.subdomain_alias : null, tier: (row.subdomain_tier ?? "free") as SubdomainTier, rootStatus: typeof row.root_subdomain_status === "string" ? row.root_subdomain_status : "none" });
   if (row.subdomain_enabled && subdomain) urls.push(`https://${subdomain}`);
   const domains = await sql`select domain from public.custom_domains where user_id=${userId} and status='verified'`;
   for (const domain of domains) urls.push(`https://${domain.domain}`);

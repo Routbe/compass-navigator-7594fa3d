@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { parse } from "parse5";
+import { parse, type DefaultTreeAdapterMap } from "parse5";
 
 export const mastodonProfileSchema = z.string().trim().max(200).transform((raw, ctx) => {
   if (!raw) return "";
@@ -31,7 +31,7 @@ export function hasReciprocalLink(html: string, expected: string[], base: string
     return `${url.origin}${url.pathname.replace(/\/+$/, "")}`;
   };
   const allowed = new Set(expected.map(canonical));
-  const walk = (node: ReturnType<typeof parse> | { nodeName: string; attrs?: { name: string; value: string }[]; childNodes?: unknown[] }): boolean => {
+  const walk = (node: DefaultTreeAdapterMap["node"]): boolean => {
     if (node.nodeName === "script" || node.nodeName === "template") return false;
     if (node.nodeName === "a" || node.nodeName === "link") {
       const attrs = "attrs" in node ? node.attrs ?? [] : [];
@@ -41,7 +41,7 @@ export function hasReciprocalLink(html: string, expected: string[], base: string
         try { const url = canonical(href); if (url && allowed.has(url)) return true; } catch { /* invalid URL */ }
       }
     }
-    return (node.childNodes ?? []).some(child => walk(child as Parameters<typeof walk>[0]));
+    return "childNodes" in node && node.childNodes.some(walk);
   };
   return walk(parse(html));
 }

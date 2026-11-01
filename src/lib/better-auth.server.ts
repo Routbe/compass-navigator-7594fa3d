@@ -444,8 +444,9 @@ export async function liveAuthChecks() {
       await new GatewayPool().query(query);
       return { ok: true as const, code: null };
     } catch (e) {
-      const code = (e as { code?: unknown })?.code;
-      return { ok: false as const, code: typeof code === "string" && /^[A-Z0-9]{5}$/.test(code) ? code : "unknown" };
+      const { code, status } = (e ?? {}) as { code?: unknown; status?: unknown };
+      if (typeof code === "string" && /^[A-Z0-9]{5}$/.test(code)) return { ok: false as const, code };
+      return { ok: false as const, code: typeof status === "number" ? `http_${status}` : "unknown" };
     }
   };
   const checks = hasDatabase()

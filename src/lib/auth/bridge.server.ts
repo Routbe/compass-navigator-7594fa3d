@@ -1,5 +1,6 @@
 import type { SessionUser } from "@/lib/auth/session.server";
-import { sql } from "@/lib/neon";
+import { sql, withDbContext } from "@/lib/neon";
+import { cleanContextId } from "@/lib/db-context";
 import { ownsAuthIdentity, IDENTITY_EMAIL_CONFLICT } from "@/lib/identity/link-rules";
 
 /**
@@ -53,17 +54,26 @@ type Row = Record<string, unknown>;
  * so no foreign key ever changes. First-time members get a row created here.
  */
 export async function bridgeIdentity(identity: RoutIdentity): Promise<SessionUser | null> {
+  const authId = cleanContextId(identity.id);
+  if (!authId) return null;
   const email = identity.email.trim().toLowerCase();
-  const { toSessionUser } = await import("@/lib/auth/session.server");
+  // public.users is row-scoped (id = rout_current_user_id()). Find an existing
+  // member through the reviewed rout_resolve_account capability, then act as
+  // that row only; ownership is still checked below before anything changes.
+  const resolved = (await withDbContext({ userId: authId, workspaceId: null }, () =>
+    sql`select user_id from public.rout_resolve_account(${email})`,
+  )) as Row[];
+  const memberId = cleanContextId(resolved[0]?.["user_id"]) ?? authId;
+  return withDbContext({ userId: memberId, workspaceId: null }, () => bridgeAs(identity, authId, memberId, email));
+}
 
+async function bridgeAs(identity: RoutIdentity, authId: string, memberId: string, email: string): Promise<SessionUser | null> {
+  const { toSessionUser } = await import("@/lib/auth/session.server");
   const existing = (await sql`
     select id, email, email_confirmed_at, user_metadata, app_metadata, created_at,
            last_sign_in_at, is_disabled
       from public.users
-     where user_metadata->>'neon_auth_id' = ${identity.id}
-        or id::text = ${identity.id}
-        or email_normalized = ${email}
-     order by (user_metadata->>'neon_auth_id' = ${identity.id}) desc nulls last
+     where id = ${memberId}
      limit 1
   `) as Row[];
 
@@ -99,8 +109,8 @@ export async function bridgeIdentity(identity: RoutIdentity): Promise<SessionUse
     const inserted = (await sql`
       insert into public.users (id, email, user_metadata, email_confirmed_at,
                                 last_sign_in_at, auth_user_id)
-      values (${identity.id}, ${identity.email}, ${JSON.stringify(metadata)}::jsonb,
-              ${identity.emailVerified ? new Date().toISOString() : null}, now(), ${identity.id}::uuid)
+      values (${authId}, ${identity.email}, ${JSON.stringify(metadata)}::jsonb,
+              ${identity.emailVerified ? new Date().toISOString() : null}, now(), ${authId}::uuid)
       on conflict (email_normalized) do nothing
       returning id, email, email_confirmed_at, user_metadata, app_metadata, created_at,
                 last_sign_in_at

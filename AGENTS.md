@@ -16,4 +16,4 @@
 - Subdirectories have their own AGENTS.md to read before changing files there.
 - Release validation is independent of runtime provider credentials; PUBLIC_ORIGIN is normalized and authoritative for authentication, with secure host-only cookies, so build gates and session routing do not disagree.
 - Validate wallet tiers in server helpers as well as RPC schemas; provider confirmation must match before atomic crediting, so internal callers cannot bypass the payment rules.
-- Fediverse profile ownership uses the existing Mastodon integration row and a server-derived namespace digest; public path, subdomain rewrites, and verified custom-domain heads share the same link helper. Why: no client-assigned proof or domain choice, and changed ownership invalidates the badge.
+- Fediverse profile ownership uses the existing Mastodon integration row and a server-derived namespace digest; anonymous reads use the narrow read_public_fediverse capability (migration 0156), and path/subdomain/custom-domain heads share one link helper. Why: owner-only users remain private, with no client-assigned proof and changed ownership invalidating the badge.

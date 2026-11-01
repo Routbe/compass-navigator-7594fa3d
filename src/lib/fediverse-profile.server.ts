@@ -69,13 +69,16 @@ export async function saveFediverseProfile(user: { id: string; emailConfirmedAt:
 }
 
 export async function readFediverseProfile(userId: string): Promise<FediverseIdentity | null> {
-  const bound = await binding(userId);
-  if (!bound) return null;
-  const rows = await sql`select handle,verified,verified_at,verify_code from public.user_integrations where user_id=${userId} and provider='mastodon' and visible=true limit 1`;
+  // Anonymous SSR cannot read users behind owner-only RLS. The reviewed SQL
+  // capability returns only public proof metadata and currently owned URLs.
+  const rows = await sql`select * from public.read_public_fediverse(${userId}::uuid)`;
   const row = rows[0];
   const url = mastodonProfileSchema.safeParse(row?.handle);
   if (!row || !url.success || !url.data || typeof row.verify_code !== "string" || !row.verify_code.startsWith("relme:")) return null;
+  if (!Array.isArray(row.urls) || !row.urls.every(value => typeof value === "string")) return null;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify([...row.urls].sort())));
+  const token = `relme:${Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("")}`;
   // Bounded proof age: an abandoned/deleted remote link never stays verified indefinitely.
   const age = Date.now() - Date.parse(String(row.verified_at ?? ""));
-  return { url: url.data, verified: row.verified === true && row.verify_code === bound.token && age >= 0 && age < 86400_000 };
+  return { url: url.data, verified: row.verified === true && row.verify_code === token && age >= 0 && age < 86400_000 };
 }

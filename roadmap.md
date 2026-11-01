@@ -7,6 +7,7 @@
 - [x] Share rel="me" output across path/subdomain and verified custom-domain profile heads; test impersonation and unsafe fetch rejection.
 - [x] Run the full unit suite (1359 tests) and TypeScript successfully.
 - [ ] Verify live Vercel login and persisted Mastodon links on both active domains: production configuration/domain access and a working authenticated account are unavailable here.
+- [ ] Apply reviewed migration 0156 for anonymous proof reads: owner-level database access is not available and migrations must not be applied automatically.
 
 - [x] Restrict release validation to DATABASE_URL and PUBLIC_ORIGIN; URL formatting warns without blocking.
 - [x] Make PUBLIC_ORIGIN authoritative for Better Auth/Bluesky and preserve secure host-only cookies.

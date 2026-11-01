@@ -11,7 +11,6 @@ import { PasswordField } from "@/components/PasswordField";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { authClient } from "@/lib/auth-client";
-import { authCallbackUrl } from "@/lib/app-url";
 import { POST_AUTH_PATH, SIGN_IN_PATH, AUTH_ERROR_CODES } from "@/lib/auth/post-auth";
 import { beginAuthIntent } from "@/lib/tour-draft.functions";
 

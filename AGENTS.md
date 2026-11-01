@@ -20,3 +20,4 @@
 - Contact AI triage uses the existing delegated triage_contact permission and server-only Gateway SDK with validated advisory output; never log or persist message payloads. Why: support staff need analysis without access to the full contact inbox or autonomous account actions.
 - Public image proxy storage caching is optional; fall back to the same DNS-checked, bounded server-side image fetch, never a browser redirect. Why: storage outages must not hide photos or expose visitor addresses.
 - Ship profile font families locally and retain complete payment options and colored brand artwork. Why: reference presentation must work without third-party font or icon requests.
+- Live profile, showcase and share-card verification marks share verified-mark geometry and color; preview font responses must contain actual font signatures. Why: identical badges and no silent textless PNGs from HTML font fallbacks.

@@ -7,6 +7,7 @@
  * naast de naam. Het ROUT-konijn komt uitsluitend uit `brand/logo`.
  */
 import { bunny } from "@/lib/brand/logo";
+import { VERIFIED_MARK } from "./verified-mark";
 
 export type OgBadge = "verified" | "human" | "domain" | "influencer" | null;
 export type OgAvatarShape = "circle" | "rounded" | "squircle" | "hexagon";
@@ -105,8 +106,7 @@ export function badgeSvg(type: OgBadge, x: number, y: number, size: number, ink:
   const s = size / 24;
   const open = `<g transform="translate(${x} ${y}) scale(${s})">`;
   if (type === "verified") {
-    // Lucide BadgeCheck, gevuld in het blauw van het profiel (#1d9bf0).
-    return `${open}<path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" fill="#1d9bf0" stroke="#1d9bf0" stroke-width="2" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+    return `${open}<path d="${VERIFIED_MARK.outline}" fill="none" stroke="${VERIFIED_MARK.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="${VERIFIED_MARK.check}" fill="none" stroke="${VERIFIED_MARK.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>`;
   }
   if (type === "human") {
     return `${open}<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" fill="none" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" fill="none" stroke="${ink}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>`;

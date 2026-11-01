@@ -139,9 +139,9 @@ function gitlabIssuer(): string {
 }
 
 export function createRoutAuth(request?: Request) {
-  // Only the reviewed Neon connector is used; DATABASE_URL cannot bypass it.
+  // Both transports share the same guarded adapter, including auth and ALTCHA.
   if (!hasDatabase()) {
-    console.error("[auth] no database configured: link a rout_app Neon connector.");
+    console.error("[auth] no runtime database configured.");
     throw new Error("DATABASE_URL ontbreekt: geen databaseverbinding ingesteld.");
   }
   const resolved = resolveAuthSecret();
@@ -458,7 +458,8 @@ export function authDiagnostics(request?: Request) {
   const base = baseUrlFor(request);
   const resolved = resolveAuthSecret();
   const core = {
-    DATABASE_URL: hasDatabase(),
+    DATABASE_URL: Boolean(env("DATABASE_URL")),
+    DATABASE_CONNECTION: hasDatabase(),
     BETTER_AUTH_SECRET: Boolean(resolved),
     BETTER_AUTH_URL: Boolean(configuredAuthOrigin(process.env)),
   };
@@ -472,5 +473,5 @@ export function authDiagnostics(request?: Request) {
       callbackUrl: `${base}/api/auth/${generic ? "oauth2/callback" : "callback"}/${id}`,
     };
   });
-  return { baseUrl: base, secretDerived: resolved?.derived ?? false, core, coreReady: Object.values(core).every(Boolean), providers };
+  return { baseUrl: base, secretDerived: resolved?.derived ?? false, core, coreReady: core.DATABASE_CONNECTION && core.BETTER_AUTH_SECRET && core.BETTER_AUTH_URL, providers };
 }

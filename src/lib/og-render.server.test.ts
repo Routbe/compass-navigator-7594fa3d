@@ -1,9 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchImageAsDataUri } from "./og-render.server";
+import { fetchImageAsDataUri, isFontBuffer } from "./og-render.server";
 
 afterEach(() => vi.unstubAllGlobals());
 
 describe("profile preview embedded avatars", () => {
+  it("rejects HTML fallback responses masquerading as fonts", () => {
+    expect(isFontBuffer(new TextEncoder().encode("<!DOCTYPE html><html>ROUT</html>"))).toBe(false);
+    expect(isFontBuffer(new Uint8Array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))).toBe(true);
+  });
   it("embeds Google avatar bytes fetched through the first-party privacy proxy", async () => {
     const fetcher = vi.fn().mockResolvedValue(new Response(new Uint8Array([1, 2, 3]), { headers: { "content-type": "image/png" } }));
     vi.stubGlobal("fetch", fetcher);

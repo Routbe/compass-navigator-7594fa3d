@@ -50,7 +50,11 @@ async function ensureFonts(origin: string) {
       FONT_PATHS.map(async (path) => {
         const response = await fetch(new URL(path, origin).toString());
         if (!response.ok) throw new Error(`font ${path} ${response.status}`);
-        return new Uint8Array(await response.arrayBuffer());
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        // A SPA fallback can return HTML with status 200 for a missing font.
+        // resvg accepts it silently and renders an image with no text.
+        if (!isFontBuffer(bytes)) throw new Error(`Invalid preview font: ${path}`);
+        return bytes;
       }),
     ).catch((error) => {
       fontsReady = null;
@@ -58,6 +62,12 @@ async function ensureFonts(origin: string) {
     });
   }
   return fontsReady;
+}
+
+export function isFontBuffer(bytes: Uint8Array): boolean {
+  if (bytes.length < 12) return false;
+  return (bytes[0] === 0 && bytes[1] === 1 && bytes[2] === 0 && bytes[3] === 0) ||
+    String.fromCharCode(...bytes.subarray(0, 4)) === "OTTO";
 }
 
 /**

@@ -7,7 +7,7 @@ const base = { handle: "demo", name: "Demo", tagline: "x", bg: "#0d0d0d", accent
 
 describe("og card", () => {
   it("shows the blue mark next to the name for a verified badge", () => {
-    expect(ogSvg({ ...base, badge: "verified" })).toContain('fill="#1d9bf0"');
+    expect(ogSvg({ ...base, badge: "verified" })).toContain('stroke="#1d9bf0"');
   });
   it("shows no blue mark when no badge is chosen", () => {
     expect(ogSvg({ ...base, badge: null })).not.toContain("#1d9bf0");

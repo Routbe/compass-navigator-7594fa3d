@@ -1,4 +1,5 @@
-import { BadgeCheck, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+import { VerifiedIdentityIcon } from "./VerifiedIdentityIcon";
 import { CreatorBadgeIcon } from "@/components/profile/CreatorBadgeIcon";
 import { BadgeBackdrop } from "@/components/profile/BadgeBackdrop";
 import { DomainBadgeIcon } from "@/components/profile/DomainBadgeIcon";
@@ -86,7 +87,7 @@ export function ProfileBadge({
     ) : type === "influencer" ? (
       <CreatorBadgeIcon className={`${iconSize} ${extra}`} />
     ) : (
-      <BadgeCheck className={`${iconSize} text-[#1d9bf0] ${extra}`} aria-hidden />
+      <VerifiedIdentityIcon className={`${iconSize} ${extra}`} />
     );
 
   // Het blauwe vinkje toont bij het openklikken altijd de echte, volledige naam

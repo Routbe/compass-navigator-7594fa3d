@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { BadgeCheck, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+import { VerifiedIdentityIcon } from "./VerifiedIdentityIcon";
 import type { ShowcaseCard } from "@/lib/showcase.functions";
 import { showcaseDisplay } from "@/lib/showcase-display";
 import { profileImageSrc } from "@/lib/image-proxy-rules";
@@ -27,7 +28,7 @@ export function ShowcaseAvatar({ card, className = "size-10" }: { card: Showcase
 export function ShowcaseName({ card }: { card: ShowcaseCard }) {
   const p = card.display ?? showcaseDisplay(null);
   const custom = p.typographyCustom || p.customDesign;
-  return <span className="min-w-0 truncate" style={{ ...nameAccentStyle(p.nameAccent, { text: "var(--foreground)", accent: "var(--primary)" }), ...(custom ? { fontFamily: fontPairingOf(p.fontPairing).heading, textShadow: p.titleGlow > 0 ? `0 0 ${p.titleGlow}px currentColor` : undefined } : {}) }}>{card.displayName ?? card.handle}</span>;
+  return <span className="min-w-0 truncate" style={{ ...nameAccentStyle(p.nameAccent, { text: "var(--color-foreground)", accent: "var(--color-primary)" }), ...(custom ? { fontFamily: fontPairingOf(p.fontPairing).heading, textShadow: p.titleGlow > 0 ? `0 0 ${p.titleGlow}px currentColor` : undefined } : {}) }}>{card.displayName ?? card.handle}</span>;
 }
 
 /** Noninteractive version of the profile mark: cards themselves are links. */
@@ -36,6 +37,6 @@ export function ShowcaseMark({ card }: { card: ShowcaseCard }) {
   if (!card.verified || !p.badgeVisible || p.badgeType === "none") return null;
   const classes = "size-5 shrink-0";
   return <span className="inline-flex shrink-0" aria-hidden><BadgeBackdrop variant={p.badgeBackdrop} color={p.badgeBackdropColor} size="sm">
-    {p.badgeType === "domain" ? <DomainBadgeIcon className={classes} /> : p.badgeType === "influencer" ? <CreatorBadgeIcon className={classes} /> : p.badgeType === "human" ? <ShieldCheck className={classes} /> : <BadgeCheck className={cn(classes, "text-identity-verified")} />}
+    {p.badgeType === "domain" ? <DomainBadgeIcon className={classes} /> : p.badgeType === "influencer" ? <CreatorBadgeIcon className={classes} /> : p.badgeType === "human" ? <ShieldCheck className={classes} /> : <VerifiedIdentityIcon className={classes} />}
   </BadgeBackdrop></span>;
 }

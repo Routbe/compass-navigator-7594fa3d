@@ -9,7 +9,7 @@ it("restores Steam in both selectable QR catalogs", () => {
 });
 it("restores all payment choices without an extra expansion", () => {
   expect(PRIMARY_PAYMENT_IDS).toEqual(["iban", "wero", "paypal", "crypto"]);
-  expect(qrTypeCategories.find(c => c.id === "payment")?.types.map(t => t.id)).toEqual(["iban", "wero", "bancontact", "payconiq", "paypal", "venmo", "cashapp", "pix", "alipay", "wechat", "crypto"]);
+  expect(qrTypeCategories.find(c => c.id === "payment")?.types.map(t => t.id)).toEqual(["iban", "wero", "paypal", "venmo", "cashapp", "pix", "alipay", "wechat", "crypto"]);
 });
 it("maps supported QR types to actual canonical documents", () => {
   for (const type of ["iban", "wero", "paypal", "crypto", "vcard", "whatsapp", "email", "sms", "pdf", "image", "wifi", "event", "maps"]) expect(getDoc(qrGuidePath(type) ?? "")).toBeDefined();

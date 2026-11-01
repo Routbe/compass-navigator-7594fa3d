@@ -89,6 +89,26 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Reference brand tiles: artwork is bundled, not fetched from a CDN. */
+:root {
+  --payment-paper: oklch(1 0 0);
+  --payment-ink: oklch(0.15 0 0);
+  --payment-venmo: oklch(0.64 0.2 250);
+  --payment-cashapp: oklch(0.77 0.25 145);
+  --payment-wechat: oklch(0.7 0.2 150);
+  --payment-crypto: oklch(0.75 0.17 65);
+  --payment-wero: oklch(0.88 0.18 95);
+  --payment-payconiq: oklch(0.68 0.23 0);
+}
+.payment-brand { background: var(--color-secondary); color: var(--color-foreground); }
+.payment-brand[data-payment-brand="paypal"], .payment-brand[data-payment-brand="pix"], .payment-brand[data-payment-brand="alipay"], .payment-brand[data-payment-brand="bancontact"] { background: var(--payment-paper); color: var(--payment-ink); }
+.payment-brand[data-payment-brand="venmo"] { background: var(--payment-venmo); color: var(--payment-paper); }
+.payment-brand[data-payment-brand="cashapp"] { background: var(--payment-cashapp); color: var(--payment-paper); }
+.payment-brand[data-payment-brand="wechat"] { background: var(--payment-wechat); color: var(--payment-paper); }
+.payment-brand[data-payment-brand="crypto"] { background: var(--payment-crypto); color: var(--payment-paper); }
+.payment-brand[data-payment-brand="wero"] { background: var(--payment-wero); color: var(--payment-ink); }
+.payment-brand[data-payment-brand="payconiq"] { background: var(--payment-payconiq); color: var(--payment-paper); }
+
 /* ROUT — "Tactile Sophistication" Design System
    Warm paper surfaces, deep matcha accent, crisp ink borders,
    organic-brutalist sticker shadows. */

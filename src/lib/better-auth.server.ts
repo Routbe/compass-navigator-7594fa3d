@@ -437,20 +437,34 @@ export function missingProviderKeys(id: string): string[] {
   return keys ? keys.filter((k) => !envAny(k)) : ["*"];
 }
 
-/** Live checks for the deploy: database reachable, email service configured. */
+/** Live checks for the deploy: each sign-in table, with SQLSTATE codes only (never values). */
 export async function liveAuthChecks() {
-  let database = false;
-  let databaseError: string | null = null;
-  try {
-    if (hasDatabase()) {
-      const pool = new GatewayPool();
-      await pool.query("select 1 from neon_auth.verification limit 1");
-      database = true;
+  const step = async (query: string) => {
+    try {
+      await new GatewayPool().query(query);
+      return { ok: true as const, code: null };
+    } catch (e) {
+      const { code, status } = (e ?? {}) as { code?: unknown; status?: unknown };
+      if (typeof code === "string" && /^[A-Z0-9]{5}$/.test(code)) return { ok: false as const, code };
+      return { ok: false as const, code: typeof status === "number" ? `http_${status}` : "unknown" };
     }
-  } catch (e) {
-    databaseError = e instanceof Error ? e.message.slice(0, 120) : "unknown";
-  }
-  return { database, databaseError, databaseTransport: databaseTransport(), emailService: Boolean(env("BREVO_API_KEY")) };
+  };
+  const checks = hasDatabase()
+    ? {
+        authVerification: await step("select 1 from neon_auth.verification limit 1"),
+        authSession: await step('select 1 from neon_auth.session limit 1'),
+        securityCheckStore: await step("select 1 from public.altcha_used limit 1"),
+        members: await step("select 1 from public.users limit 1"),
+      }
+    : null;
+  const database = Boolean(checks && Object.values(checks).every((c) => c.ok));
+  return {
+    database,
+    databaseError: checks ? (Object.entries(checks).filter(([, c]) => !c.ok).map(([k, c]) => `${k}:${c.code}`).join(",") || null) : "no_database_configured",
+    checks,
+    databaseTransport: databaseTransport(),
+    emailService: Boolean(env("BREVO_API_KEY")),
+  };
 }
 
 /** Diagnostic report — names only, never values. */

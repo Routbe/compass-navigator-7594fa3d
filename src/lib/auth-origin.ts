@@ -16,3 +16,24 @@ export function configuredAuthOrigin(env: Record<string, string | undefined>): s
 }
 
 export const AUTH_COOKIE_ATTRIBUTES = { httpOnly: true, secure: true, sameSite: "lax" as const, path: "/" };
+const SIGN_IN_PAGES = new Set(["/auth/sign-in", "/auth/sign-up"]);
+
+/**
+ * Sign-in must start, call back and finish on one host: Better Auth's state and
+ * session cookies are host-only. When the visitor opens a sign-in page on any
+ * other host than the configured auth origin, send them there first.
+ */
+export function canonicalSignInRedirect(
+  requestUrl: string,
+  forwardedHost: string | null,
+  configured: string | null,
+): string | null {
+  if (!configured) return null;
+  const url = new URL(requestUrl);
+  if (!SIGN_IN_PAGES.has(url.pathname.replace(/\/+$/, ""))) return null;
+  const host = (forwardedHost?.split(",")[0]?.trim() || url.host).toLowerCase();
+  const target = new URL(configured);
+  if (host === target.host.toLowerCase()) return null;
+  if (/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)) return null;
+  return `${target.origin}${url.pathname}${url.search}`;
+}

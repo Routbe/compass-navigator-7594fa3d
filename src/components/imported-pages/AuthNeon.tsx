@@ -11,7 +11,6 @@ import { PasswordField } from "@/components/PasswordField";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { authClient } from "@/lib/auth-client";
-import { authCallbackUrl } from "@/lib/app-url";
 import { POST_AUTH_PATH, SIGN_IN_PATH, AUTH_ERROR_CODES } from "@/lib/auth/post-auth";
 import { beginAuthIntent } from "@/lib/tour-draft.functions";
 
@@ -149,8 +148,9 @@ export default function AuthNeon({ initialMode = "magic" }: { initialMode?: Mode
 
   // Altijd de canonieke origin: preview-hosts mogen nooit in een OAuth-redirect
   // belanden, anders weigert Google met `redirect_uri_mismatch`.
-  const callbackURL = adminPortal && typeof window !== "undefined" ? `${window.location.origin}${POST_AUTH_PATH}` : authCallbackUrl(POST_AUTH_PATH);
-  const errorCallbackURL = adminPortal && typeof window !== "undefined" ? `${window.location.origin}${SIGN_IN_PATH}` : authCallbackUrl(SIGN_IN_PATH);
+  // Relative: finish on the same host that received the host-only session cookie.
+  const callbackURL = POST_AUTH_PATH;
+  const errorCallbackURL = SIGN_IN_PATH;
 
   const onEmailChange = (value: string) => {
     setEmail(value);

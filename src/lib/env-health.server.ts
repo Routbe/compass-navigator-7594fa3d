@@ -8,8 +8,9 @@
 import type { EnvHealth, ServiceHealth } from "./env-health.functions";
 
 async function probeNeon(): Promise<ServiceHealth> {
-  if (!process.env["NEON_API_KEY"] || !process.env["LOVABLE_API_KEY"]) {
-    return { key: "neon", label: "Neon Postgres", ok: false, detail: "Neon gateway-configuratie ontbreekt" };
+  const { hasDatabase } = await import("./neon");
+  if (!hasDatabase()) {
+    return { key: "neon", label: "Neon Postgres", ok: false, detail: "Databaseconfiguratie ontbreekt" };
   }
   try {
     const { sql } = await import("./neon");

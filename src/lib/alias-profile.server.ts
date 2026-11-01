@@ -187,8 +187,11 @@ export async function readPublicAliasProfile(rawHandle: string) {
   `) as Row[];
   const row = rows[0];
   if (!row) return null;
+  const { readFediverseProfile } = await import("./fediverse-profile.server");
+  const fediverse = await readFediverseProfile(String(row["id"])).catch(() => null);
   return {
     ...row,
+    fediverse,
     verified: false,
     is_pro: hasProfilePro({ verified: row["owner_verified"], is_paid: row["owner_is_paid"], tier: row["owner_tier"] }),
     // Het blauwe vinkje blijft bij het rootprofiel; het aliasprofiel toont het

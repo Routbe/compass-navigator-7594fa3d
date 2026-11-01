@@ -8,6 +8,7 @@
  */
 
 export type EnvKey =
+  | "DATABASE_URL"
   | "LOVABLE_API_KEY"
   | "NEON_API_KEY"
   | "BETTER_AUTH_SECRET"
@@ -23,10 +24,15 @@ export type EnvKey =
   | "LOVABLE_CRON_SECRET";
 
 /** Keys the app cannot run without in production. */
-export const REQUIRED_ENV: EnvKey[] = ["LOVABLE_API_KEY", "NEON_API_KEY", "BETTER_AUTH_SECRET", "BETTER_AUTH_URL", "NEXT_PUBLIC_APP_URL", "PUBLIC_SITE_URL", "PUBLIC_ORIGIN"];
+export const REQUIRED_ENV: EnvKey[] = ["DATABASE_URL", "BETTER_AUTH_SECRET", "PUBLIC_ORIGIN"];
 
 /** Keys that only disable a feature when missing. */
 export const OPTIONAL_ENV: EnvKey[] = [
+  "LOVABLE_API_KEY",
+  "NEON_API_KEY",
+  "BETTER_AUTH_URL",
+  "NEXT_PUBLIC_APP_URL",
+  "PUBLIC_SITE_URL",
   "BREVO_API_KEY",
   "ADMIN_EMAIL",
   "STRIPE_SECRET_KEY",
@@ -44,6 +50,7 @@ export type EnvReport = {
 };
 
 function has(key: EnvKey): boolean {
+  if (key === "DATABASE_URL" && process.env["NEON_API_KEY"]?.trim() && process.env["LOVABLE_API_KEY"]?.trim()) return true;
   const value = process.env[key];
   return typeof value === "string" && value.trim().length > 0;
 }

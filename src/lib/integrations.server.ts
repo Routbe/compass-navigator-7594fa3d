@@ -516,6 +516,12 @@ export async function publicIntegrations(handle: string, mode: "pro" | "social" 
   );
   const all = await Promise.all(
     shown.map(async ({ row, ...m }) => {
+      // A rel=me integration must never regain a stale badge through the hub.
+      if (m.provider === "mastodon" && m.handle.startsWith("https://")) {
+        const { readFediverseProfile } = await import("./fediverse-profile.server");
+        const identity = await readFediverseProfile(String(row["user_id"])).catch(() => null);
+        m.verified = identity?.verified === true;
+      }
       const cached = (row["status_json"] as IntegrationStatus | null) ?? null;
       const at = row["status_at"] ? Date.parse(String(row["status_at"])) : 0;
       const item = integrationById(m.provider);

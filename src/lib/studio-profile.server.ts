@@ -312,7 +312,9 @@ export async function readPublicProfile(rawHandle: string) {
     console.warn("[public-profile:social-links:skipped]", username, error);
   }
   const trust = await readTrustMeta(profile);
-  return { ...profile, ...trust, is_pro: hasProfilePro(profile), social_links: socialLinks } as Row;
+  const { readFediverseProfile } = await import("./fediverse-profile.server");
+  const fediverse = await readFediverseProfile(String(profile["id"])).catch(() => null);
+  return { ...profile, ...trust, is_pro: hasProfilePro(profile), social_links: socialLinks, fediverse } as Row;
 }
 
 /**

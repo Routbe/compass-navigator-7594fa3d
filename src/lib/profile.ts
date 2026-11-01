@@ -113,6 +113,7 @@ export const PROMO_COPY_PRESETS = [
 export const isPromoBlock = (kind: string) => kind === "promo";
 
 export interface ProfileRecord {
+  fediverse?: { url: string; verified: boolean } | null;
   id: string;
   username: string | null;
   display_name: string | null;

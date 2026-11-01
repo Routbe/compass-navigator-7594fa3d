@@ -1,5 +1,6 @@
 import { useI18n } from "@/lib/i18n";
 import { FeedbackPanel } from "@/components/studio/FeedbackPanel";
+import { FediverseProfileField } from "@/components/dashboard/FediverseProfileField";
 import { EventsPanel } from "@/components/studio/EventsPanel";
 import { isProfileSectionKind, PROFILE_SECTION_LABELS } from "@/lib/profile-section-blocks";
 import { integrationById } from "@/lib/integrations-catalog";
@@ -1878,6 +1879,7 @@ export function ProfileEditor({ variant = "verified", pageMode = "profile", onPa
                 </AccordionTrigger>
                 <AccordionContent className="space-y-4 pb-5">
                   <SubdomainPanel />
+                  <FediverseProfileField />
                   <EmailForwardingPanel />
                   <EmailAliasDomains />
                 </AccordionContent>

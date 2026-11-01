@@ -1,6 +1,6 @@
 /**
- * Server-only Neon access through the linked gateway, with atomic SQL batches.
- * Credentials are read per request; native/direct connection strings are not used.
+ * Server-only Neon access through the linked gateway or runtime DATABASE_URL.
+ * Both paths read credentials per request and use identical guarded SQL batches.
  *
  * `sql` mimics the @neondatabase/serverless HTTP client surface used across the
  * app: tagged templates, `sql.query(text, params)`, `sql.unsafe(raw)` and
@@ -8,6 +8,7 @@
  */
 
 import { AsyncLocalStorage } from "node:async_hooks";
+import { neon as directNeon } from "@neondatabase/serverless";
 import { contextStatements, type DbContext } from "@/lib/db-context";
 import { GENERIC_TEMPORARY_ERROR } from "@/lib/security/safe-errors";
 
@@ -32,12 +33,13 @@ type Row = Record<string, unknown>;
 type Statement = { query: string; params: unknown[] };
 type GatewayResult = { rows: Row[]; rowCount: number | null; command: string };
 
-/** Runtime exclusively uses the linked Neon gateway; owner connections fail closed. */
+/** Resolve credentials on every request, never while bundling the application. */
 export function hasDatabase(): boolean {
-  return Boolean(process.env["NEON_API_KEY"] && process.env["LOVABLE_API_KEY"]);
+  return databaseTransport() !== "none";
 }
-export function databaseTransport(): "gateway" | "none" {
-  return hasDatabase() ? "gateway" : "none";
+export function databaseTransport(): "gateway" | "direct" | "none" {
+  if (process.env["NEON_API_KEY"]?.trim() && process.env["LOVABLE_API_KEY"]?.trim()) return "gateway";
+  return process.env["DATABASE_URL"]?.trim() ? "direct" : "none";
 }
 
 /** Transaction-scoped switch to the least-privilege role (no-op when already rout_app). */
@@ -60,7 +62,7 @@ function gatewayHeaders(): Record<string, string> {
   const lovable = process.env["LOVABLE_API_KEY"];
   const connection = process.env["NEON_API_KEY"];
   if (!lovable || !connection) {
-    throw new Error("No database configured: link a rout_app Neon connector (NEON_API_KEY + LOVABLE_API_KEY); DATABASE_URL is not used.");
+    throw new Error("DATABASE_URL ontbreekt: geen runtime databaseverbinding ingesteld.");
   }
   return {
     Authorization: `Bearer ${lovable}`,
@@ -124,9 +126,26 @@ export async function runBatch(
     ...(opts.withContext === false ? [] : activeContext()),
     { query: RUNTIME_ROLE_GUARD, params: [] },
   ];
-  const json = await post({
-    queries: [...prefix, ...input].map(s => ({ query: s.query, params: normaliseParams(s.params) })),
-  });
+  const queries = [...prefix, ...input].map(s => ({ query: s.query, params: normaliseParams(s.params) }));
+  let json: { results: GatewayResult[] };
+  if (databaseTransport() === "direct") {
+    const connectionString = process.env["DATABASE_URL"]?.trim();
+    if (!connectionString) throw new Error(GENERIC_TEMPORARY_ERROR);
+    try {
+      // The identical atomic role/context/guard prefix applies to both paths.
+      // An owner URL never gets permission to query as the owner.
+      const client = directNeon(connectionString, { fullResults: true });
+      const results = await client.transaction(queries.map(s => client.query(s.query, s.params)));
+      json = { results: results.map(r => ({ rows: r.rows as Row[], rowCount: r.rowCount, command: r.command })) };
+    } catch (cause) {
+      const code = (cause as { code?: unknown })?.code;
+      const safeCode = typeof code === "string" && /^[A-Z0-9]{5}$/.test(code) ? code : undefined;
+      console.error("[database] direct request failed", { code: safeCode });
+      throw Object.assign(new Error(GENERIC_TEMPORARY_ERROR), { code: safeCode });
+    }
+  } else {
+    json = await post({ queries });
+  }
   if (!Array.isArray(json.results) || json.results.length !== prefix.length + input.length) {
     throw new Error("Invalid Neon transaction response");
   }

@@ -7,6 +7,7 @@ describe("wallet endpoints require a session", () => {
     const server = (requireAuth as unknown as { options: { server: (a: unknown) => Promise<unknown> } }).options.server;
     const next = vi.fn();
     await expect(server({ next, context: {}, data: { userId: "forged-other-user" } })).rejects.toThrow("Unauthorized");
+    await expect(server({ next, context: {}, data: {} })).rejects.toMatchObject({ statusCode: 401 });
     expect(next).not.toHaveBeenCalled();
   });
 });

@@ -22,4 +22,10 @@ describe("log redaction", () => {
   it("masks e-mail addresses in logged errors", () => {
     expect(JSON.stringify(describeErrorForLog(new Error("failed for jonas@rout.be")))).not.toContain("jonas@");
   });
+  it("removes arbitrary provider messages and contact contents from error diagnostics", () => {
+    const result = describeErrorForLog(new Error("Jan Peeters PRIVATE_CONTACT_TEXT token=private-value"));
+    expect(JSON.stringify(result)).not.toContain("PRIVATE_CONTACT_TEXT");
+    expect(JSON.stringify(result)).not.toContain("private-value");
+    expect(result.stack).toContain("at ");
+  });
 });

@@ -1,7 +1,8 @@
 # Production and security fixes
 
 ## Design restoration and support triage
-- [ ] Follow up on remaining design regressions; inspect preview name/text visibility and make preview verification mark match the live site.
+- [x] Strengthened the existing hand-drawn frame strokes using semantic ink tokens; corrected showcase name color variables and unified live/showcase/share-image verification vectors and exact blue.
+- [x] Actual profile PNG checked: name, handle and description render visibly; rejected invalid font responses to prevent silent textless raster output. Preview tests (10) and TypeScript pass.
 - [x] Compared the earlier repository: restored original dark background, compact header buttons, focus accents, complete payment choices/colored artwork and Steam choice; bundled the missing profile fonts, retaining newer security and functionality.
 - [x] Diagnosed the image regression: mandatory persistent image caching suppressed all upstream photos without internal storage; public proxy and Mastodon account photos now use the same guarded bounded server fetch as fallback. Static reference images were already present and return 200.
 - [x] Added permission-protected AI summary/category/priority/follow-up on contact page and selected-message dialog; Support permission template, no full inbox access for delegated staff, validated output and redacted obvious secrets.

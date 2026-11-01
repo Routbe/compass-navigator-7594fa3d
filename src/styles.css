@@ -161,7 +161,9 @@ html {
   --destructive-foreground: 40 43% 97%;
   --warning: 32 90% 44%;
   --warning-foreground: 40 43% 97%;
-  --identity-verified: 204 88% 53%;
+  --identity-verified: #1d9bf0;
+  --sketch-ink: hsl(var(--foreground) / 0.45);
+  --sketch-echo: hsl(var(--foreground) / 0.25);
 
   --border: 34 14% 84%;
   /* Crisp ink border for tactile surfaces */
@@ -250,7 +252,7 @@ html {
   --color-popover: hsl(var(--popover));
   --color-popover-foreground: hsl(var(--popover-foreground));
   --color-primary: hsl(var(--primary));
-  --color-identity-verified: hsl(var(--identity-verified));
+  --color-identity-verified: var(--identity-verified);
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
@@ -576,7 +578,7 @@ html {
     position: absolute;
     inset: -10px;
     pointer-events: none;
-    border: 1.5px solid hsl(var(--foreground) / 0.18);
+    border: 1.5px solid var(--sketch-ink);
     border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
     transform: rotate(-0.35deg);
   }
@@ -586,7 +588,7 @@ html {
     position: absolute;
     inset: -6px -13px -13px -6px;
     pointer-events: none;
-    border: 1px solid hsl(var(--foreground) / 0.1);
+    border: 1px solid var(--sketch-echo);
     border-radius: 15px 225px 15px 255px / 225px 15px 255px 15px;
     transform: rotate(0.5deg);
   }

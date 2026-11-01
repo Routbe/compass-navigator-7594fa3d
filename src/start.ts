@@ -101,16 +101,7 @@ const customDomainRootMiddleware = createMiddleware().server(async ({ request, n
   return next();
 });
 
-/** Sign-in pages always open on the configured auth origin (same-host cookies). */
-const canonicalSignInMiddleware = createMiddleware().server(async ({ request, next }) => {
-  if (request.method !== "GET" && request.method !== "HEAD") return next();
-  const { canonicalSignInRedirect, configuredAuthOrigin } = await import("./lib/auth-origin");
-  const to = canonicalSignInRedirect(request.url, request.headers.get("x-forwarded-host"), configuredAuthOrigin(process.env));
-  if (to) return new Response(null, { status: 307, headers: { location: to, "cache-control": "no-store" } });
-  return next();
-});
-
 export const startInstance = createStart(() => ({
   functionMiddleware: [],
-  requestMiddleware: [errorMiddleware, appModeMiddleware, canonicalSignInMiddleware, customDomainRootMiddleware, securityHeadersMiddleware, csrfMiddleware],
+  requestMiddleware: [errorMiddleware, appModeMiddleware, customDomainRootMiddleware, securityHeadersMiddleware, csrfMiddleware],
 }));

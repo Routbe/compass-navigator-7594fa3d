@@ -10,7 +10,7 @@ import { betterAuthDatabase } from "@/lib/neon-kysely.server";
 import { APP_DOMAINS } from "@/lib/app-domains";
 import { canonicalAppUrl, isApprovedHost } from "@/lib/app-url";
 import { EXPLICIT_ACCOUNT_LINKING } from "@/lib/identity/link-rules";
-import { AUTH_COOKIE_ATTRIBUTES, configuredAuthOrigin } from "@/lib/auth-origin";
+import { AUTH_COOKIE_ATTRIBUTES, configuredAuthOrigin , chooseAuthBaseUrl } from "@/lib/auth-origin";
 import { logServerError } from "@/lib/security/safe-errors";
 
 /**
@@ -95,25 +95,8 @@ function requestOrigin(request?: Request): string | null {
 
 /** The base URL OAuth callbacks are built on: the approved request host first, else configured, else canonical. */
 function baseUrlFor(request?: Request): string {
-  const configured = configuredAuthOrigin(process.env);
   const origin = requestOrigin(request);
-  // Explicit deployment configuration outranks proxy headers and stale aliases.
-  if (configured) return configured;
-  // The state cookie is set on the request host; returning to a different
-  // configured host loses it → state_mismatch. Follow the live host instead.
-  if (origin && isApprovedHost(new URL(origin).host)) return origin;
-  if (configured) {
-    const base = configured.trim().replace(/\/+$/, "").replace(/\/api\/auth$/, "");
-    const normalized = /^https?:\/\//.test(base) ? base : `https://${base}`;
-    if (origin && new URL(origin).host !== new URL(normalized).host) {
-      // State cookie is set on the request host but the provider returns to
-      // BETTER_AUTH_URL's host → cookie missing → state_mismatch.
-      console.warn(`[auth] host mismatch: request=${origin} BETTER_AUTH_URL=${normalized}. OAuth state cookies will not match.`);
-    }
-    return normalized;
-  }
-  if (origin && isApprovedHost(new URL(origin).host)) return origin;
-  return canonicalAppUrl();
+  return chooseAuthBaseUrl(origin, Boolean(origin && isApprovedHost(new URL(origin).host)), configuredAuthOrigin(process.env), canonicalAppUrl());
 }
 
 export { baseUrlFor as authBaseUrlFor };

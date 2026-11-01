@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/middleware";
+import { contactTriageInput } from "./contact-triage";
 
 const querySchema = z.object({
   status: z.enum(["all", "pending", "sent", "sent_partial", "failed"]).default("all"),
@@ -22,4 +23,12 @@ export const listContactSubmissions = createServerFn({ method: "POST" })
     ]);
     await assertAdminRole(context.userId);
     return fetchContactSubmissions(data);
+  });
+
+export const analyzeContactMessage = createServerFn({ method: "POST" })
+  .middleware([requireAuth])
+  .inputValidator((data: unknown) => contactTriageInput.parse(data))
+  .handler(async ({ data, context }) => {
+    const { analyzeContactForSupport } = await import("./contact-triage.server");
+    return analyzeContactForSupport(context.userId, data);
   });

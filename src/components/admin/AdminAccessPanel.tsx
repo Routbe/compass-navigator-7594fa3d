@@ -47,10 +47,12 @@ const PERMISSIONS = [
   { key: "manage_integrations", label: "Koppelingen schakelen" },
   { key: "review_apps", label: "OAuth-apps beoordelen" },
   { key: "export_data", label: "Gegevens exporteren" },
+  { key: "triage_contact", label: "Contactberichten analyseren met AI" },
 ] as const;
 
 /** One-click role templates; they only toggle the permissions above. */
 const ROLE_TEMPLATES: { label: string; perms: (typeof PERMISSIONS)[number]["key"][] }[] = [
+  { label: "Support", perms: ["triage_contact"] },
   { label: "Compliance", perms: ["verify_users", "edit_names", "view_device_data"] },
   { label: "Moderator", perms: ["grant_badges", "block_features"] },
   { label: "Financieel", perms: ["approve_sepa", "export_data"] },

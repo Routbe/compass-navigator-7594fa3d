@@ -14,6 +14,7 @@ const permissionSchema = z.enum([
   "manage_integrations",
   "review_apps",
   "export_data",
+  "triage_contact",
 ]);
 
 const featureSchema = z.enum([

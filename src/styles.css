@@ -1,6 +1,21 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "@fontsource/dm-sans/400.css";
+@import "@fontsource/dm-sans/500.css";
+@import "@fontsource/dm-sans/700.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/lora/400.css";
+@import "@fontsource/lora/600.css";
+@import "@fontsource/playfair-display/500.css";
+@import "@fontsource/playfair-display/700.css";
+@import "@fontsource/plus-jakarta-sans/400.css";
+@import "@fontsource/plus-jakarta-sans/600.css";
+@import "@fontsource/plus-jakarta-sans/800.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/700.css";
 @import "@fontsource/work-sans/400.css";
 @import "@fontsource/work-sans/500.css";
 @import "@fontsource/work-sans/600.css";
@@ -152,7 +167,7 @@ html {
 
 .dark {
   color-scheme: dark;
-  --background: 240 4.35% 4.51%;
+  --background: 30 6% 7%;
   --foreground: 42 31% 94%;
   --card: 30 5% 11%;
   --card-foreground: 42 31% 94%;
@@ -290,7 +305,7 @@ html {
     color: var(--color-foreground);
     -webkit-font-smoothing: antialiased;
     font-family: "Work Sans", system-ui, sans-serif;
-    letter-spacing: -0.005em;
+    letter-spacing: 0;
   }
 
   h1,
@@ -301,7 +316,7 @@ html {
   h6 {
     font-family: "Instrument Serif", Georgia, serif;
     font-weight: 400;
-    letter-spacing: -0.015em;
+    letter-spacing: 0;
   }
 }
 
@@ -763,7 +778,7 @@ textarea:focus-visible {
  * ring for every focusable element reached by keyboard.
  */
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 2px solid hsl(var(--primary));
+  outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
   border-radius: calc(var(--radius) - 0.25rem);
 }
@@ -771,9 +786,9 @@ textarea:focus-visible {
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid hsl(var(--primary));
-  outline-offset: 2px;
-  border-color: hsl(var(--primary));
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 1px;
+  border-color: hsl(var(--ring));
 }
 
 /* Respect reduced-motion for every decorative animation. */

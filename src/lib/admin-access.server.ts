@@ -23,6 +23,7 @@ export const ADMIN_PERMISSIONS = [
   "manage_integrations",
   "review_apps",
   "export_data",
+  "triage_contact",
 ] as const;
 
 export type AdminPermission = (typeof ADMIN_PERMISSIONS)[number];
@@ -69,7 +70,7 @@ export async function assertAdminPermission(userId: string, permission: AdminPer
   const { isPublicMode } = await import("./app-mode");
   if (isPublicMode()) throw new Error("forbidden");
   if (!(await hasAdminPermission(userId, permission))) {
-    throw new Error("forbidden");
+    throw Object.assign(new Error("forbidden"), { statusCode: 403 });
   }
 }
 

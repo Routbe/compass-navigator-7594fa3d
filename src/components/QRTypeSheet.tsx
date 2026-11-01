@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Drawer, DrawerClose, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { useI18n } from "@/lib/i18n";
-import { QRTypeRow, QRType, qrTypeCategories, categoryOf, InternationalPaymentOptions } from "./QRTypeSelector";
+import { QRTypeRow, QRType, qrTypeCategories, categoryOf } from "./QRTypeSelector";
 
 interface Props {
   selectedType: QRType;
@@ -69,7 +69,6 @@ export function QRTypeSheet({ selectedType, onTypeChange }: Props) {
                 fallbackIcon={activeCat.Icon}
               />
             ))}
-            {activeCat?.id === "payment" && <InternationalPaymentOptions selectedType={selectedType} onSelect={pick} />}
           </div>
         </DrawerContent>
       </Drawer>

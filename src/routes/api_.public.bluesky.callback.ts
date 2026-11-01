@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { clearLinkIntent, maybeLinkToCurrentUser } from "@/lib/link-intent";
+import { configuredAuthOrigin } from "@/lib/auth-origin";
 
 const STATE_COOKIE = "rout_bsky_state";
 const PENDING_COOKIE = "rout_fedi_pending";
@@ -41,8 +42,7 @@ export const Route = createFileRoute("/api_/public/bluesky/callback")({
             ? "Bluesky heeft de aanmelding geweigerd. Probeer het opnieuw."
             : "De aanmelding bij Bluesky is afgebroken.";
           console.error("[bluesky] callback rejected", {
-            error: url.searchParams.get("error")?.slice(0, 80) ?? null,
-            iss: url.searchParams.get("iss")?.slice(0, 200) ?? null,
+            providerRejected: Boolean(failure),
             hasCode: Boolean(code),
             hasState: Boolean(returnedState),
           });
@@ -60,7 +60,7 @@ export const Route = createFileRoute("/api_/public/bluesky/callback")({
 
           const host = request.headers.get("host") ?? "";
           const origin =
-            process.env["NEXT_PUBLIC_APP_URL"]?.replace(/\/$/, "") ||
+            configuredAuthOrigin(process.env) ||
             (isApprovedHost(host) && !host.startsWith("localhost")
               ? `https://${host}`
               : canonicalAppUrl());

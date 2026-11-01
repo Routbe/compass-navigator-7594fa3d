@@ -1,6 +1,6 @@
 /**
- * Server-only Neon access through the linked gateway, with atomic SQL batches.
- * Credentials are read per request; native/direct connection strings are not used.
+ * Server-only Neon access through the linked gateway or runtime DATABASE_URL.
+ * Both paths read credentials per request and use identical guarded SQL batches.
  *
  * `sql` mimics the @neondatabase/serverless HTTP client surface used across the
  * app: tagged templates, `sql.query(text, params)`, `sql.unsafe(raw)` and
@@ -62,7 +62,7 @@ function gatewayHeaders(): Record<string, string> {
   const lovable = process.env["LOVABLE_API_KEY"];
   const connection = process.env["NEON_API_KEY"];
   if (!lovable || !connection) {
-    throw new Error("No database configured: link a rout_app Neon connector (NEON_API_KEY + LOVABLE_API_KEY); DATABASE_URL is not used.");
+    throw new Error("DATABASE_URL ontbreekt: geen runtime databaseverbinding ingesteld.");
   }
   return {
     Authorization: `Bearer ${lovable}`,

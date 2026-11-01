@@ -1,6 +1,7 @@
 # Production and security fixes
 
 ## Design restoration and support triage
+- [ ] Follow up on remaining design regressions; inspect preview name/text visibility and make preview verification mark match the live site.
 - [x] Compared the earlier repository: restored original dark background, compact header buttons, focus accents, complete payment choices/colored artwork and Steam choice; bundled the missing profile fonts, retaining newer security and functionality.
 - [x] Diagnosed the image regression: mandatory persistent image caching suppressed all upstream photos without internal storage; public proxy and Mastodon account photos now use the same guarded bounded server fetch as fallback. Static reference images were already present and return 200.
 - [x] Added permission-protected AI summary/category/priority/follow-up on contact page and selected-message dialog; Support permission template, no full inbox access for delegated staff, validated output and redacted obvious secrets.

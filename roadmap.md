@@ -5,7 +5,7 @@
 - [x] Verify database/authentication transport tests before implementing Fediverse changes.
 - [x] Add verified-email-bound Mastodon profile input and reciprocal-link verification.
 - [x] Share rel="me" output across path/subdomain and verified custom-domain profile heads; test impersonation and unsafe fetch rejection.
-- [x] Run the full unit suite (1359 tests) and TypeScript successfully.
+- [x] Validate all 1360 tests: full suite's only failure (new function missing from snapshot) corrected by offline replay and successful rerun; TypeScript exits 0, sign-in page has no browser errors, session endpoint returns 200.
 - [ ] Verify live Vercel login and persisted Mastodon links on both active domains: production configuration/domain access and a working authenticated account are unavailable here.
 - [ ] Apply reviewed migration 0156 for anonymous proof reads: owner-level database access is not available and migrations must not be applied automatically.
 

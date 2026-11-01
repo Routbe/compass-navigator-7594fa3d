@@ -26,6 +26,7 @@ import { PAYMENT_METHODS, isPaymentType, PaymentId } from "@/lib/payments";
 import { useI18n } from "@/lib/i18n";
 import { PaymentBrandIcon } from "./PaymentBrandIcon";
 import { Button } from "@/components/ui/button";
+import { siSteam } from "simple-icons";
 
 export type QRType =
   | "url"
@@ -96,6 +97,7 @@ export const baseQrTypes: QRTypeOption[] = [
   { id: "maps", label: "Map location", labelKey: "type.maps" },
   { id: "meeting", label: "Meeting link", labelKey: "type.meeting" },
   { id: "feedback", label: "Feedback & Reviews", labelKey: "type.feedback" },
+  { id: "steam", label: "Steam profile", labelKey: "type.steam" },
 ];
 
 const byId = (id: QRType) => {
@@ -128,14 +130,14 @@ export const qrTypeCategories: QRTypeCategory[] = [
     labelKey: "cat.link",
     label: "Link & Web",
     Icon: Link2,
-    types: [byId("url"), byId("app"), byId("social")],
+    types: [byId("url"), byId("app"), byId("social"), byId("steam")],
   },
   {
     id: "payment",
     labelKey: "cat.payment",
     label: "Payment",
     Icon: Wallet,
-    types: PRIMARY_PAYMENT_IDS.map(id => ({ id, label: PAYMENT_METHODS.find(m => m.id === id)?.label ?? id })),
+    types: PAYMENT_METHODS.map(m => ({ id: m.id, label: m.label })),
   },
   {
     id: "contact",
@@ -161,7 +163,7 @@ export const qrTypeCategories: QRTypeCategory[] = [
 ];
 
 /** Flat lookup across every tier. */
-export const allQrTypes: QRTypeOption[] = [...qrTypeCategories.flatMap((c) => c.types), ...internationalPaymentTypes];
+export const allQrTypes: QRTypeOption[] = qrTypeCategories.flatMap((c) => c.types);
 
 export const categoryOf = (type: QRType) =>
   qrTypeCategories.find((c) => c.types.some((t) => t.id === type) || (c.id === "payment" && isPaymentType(type))) ?? qrTypeCategories[0];
@@ -170,11 +172,10 @@ export const categoryOf = (type: QRType) =>
 export function QRTypeIcon({ id, fallback }: { id: QRType; fallback?: typeof Link2 }) {
   if (isPaymentType(id)) {
     return (
-      <span className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
-        <PaymentBrandIcon id={id} className="w-6 h-6" />
-      </span>
+      <PaymentBrandIcon id={id} className="w-10 h-10" />
     );
   }
+  if (id === "steam") return <span className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0"><svg viewBox="0 0 24 24" className="w-5 h-5 fill-current text-foreground" role="img" aria-label="Steam"><path d={siSteam.path} /></svg></span>;
   const Icon = typeIcons[id] ?? fallback ?? Link2;
   return (
     <span className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
@@ -301,7 +302,6 @@ export function QRTypeSelector({ selectedType, onTypeChange }: QRTypeSelectorPro
             fallbackIcon={active.Icon}
           />
         ))}
-        {active.id === "payment" && <InternationalPaymentOptions selectedType={selectedType} onSelect={onTypeChange} />}
       </div>
     </div>
   );

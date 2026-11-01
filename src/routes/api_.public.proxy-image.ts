@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const MAX_BYTES = 5 * 1024 * 1024;
-
 /**
  * Privacy proxy: visitors load third-party images through ROUT, so their IP
  * and cookies never reach the image host. Allowlisted hosts only.
@@ -22,8 +20,8 @@ export const Route = createFileRoute("/api_/public/proxy-image")({
         try {
           const { validateOutboundUrl } = await import("@/lib/security/ssrf-guard.server");
           await validateOutboundUrl(target.toString(), AbortSignal.timeout(3000));
-          const { cachedRemoteImage } = await import("@/lib/integrations/mastodon.server");
-          const response = await cachedRemoteImage(target.toString());
+          const { readPublicImage } = await import("@/lib/public-image.server");
+          const response = await readPublicImage(target.toString());
           if (response.ok) return response;
           const { unavailableImageResponse } = await import("@/lib/image-placeholder");
           return unavailableImageResponse();

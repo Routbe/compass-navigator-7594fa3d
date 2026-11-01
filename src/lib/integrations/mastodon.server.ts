@@ -11,13 +11,10 @@ const handles = new Map<string, { image: string; expires: number }>();
 /** Cache account lookup as well as media; never expose provider URLs to browsers. */
 export async function cachedMastodonAvatar(handle: string): Promise<Response> {
   const lookup = mastodonHandleUrl(handle);
-  if (!storageConfigured("internal")) {
-    console.error("[avatar-cache] storage_not_configured");
-    return new Response("Image cache unavailable", { status: 503 });
-  }
+  const { readPublicImage } = await import("../public-image.server");
   const key = lookup.href;
   const existing = handles.get(key);
-  if (existing && existing.expires > Date.now()) return cachedRemoteImage(existing.image);
+  if (existing && existing.expires > Date.now()) return readPublicImage(existing.image);
   const signal = AbortSignal.timeout(IMAGE_TIMEOUT_MS);
   const safe = await validateOutboundUrl(lookup.href, signal);
   const response = await fetch(safe, { redirect: "error", signal, headers: { accept: "application/json" } });
@@ -38,7 +35,7 @@ export async function cachedMastodonAvatar(handle: string): Promise<Response> {
   const account = JSON.parse(text) as { avatar_static?: unknown; avatar?: unknown };
   const image = typeof account.avatar_static === "string" ? account.avatar_static : account.avatar;
   if (typeof image !== "string") throw new Error("Missing avatar");
-  const result = await cachedRemoteImage(image);
+  const result = await readPublicImage(image);
   if (result.ok) {
     if (handles.size >= 1000) { const first = handles.keys().next().value; if (first) handles.delete(first); }
     handles.set(key, { image, expires: Date.now() + IMAGE_CACHE_SECONDS * 1000 });

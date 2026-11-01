@@ -1,6 +1,7 @@
-import { validateReleaseEnvironment } from "./release-config";
+import { releaseEnvironmentWarnings, validateReleaseEnvironment } from "./release-config";
 
 const issues = validateReleaseEnvironment(process.env);
+for (const warning of releaseEnvironmentWarnings(process.env)) console.warn(`Warning: ${warning}`);
 if (issues.length) {
   console.error("Release configuration is incomplete:");
   for (const issue of issues) console.error(`- ${issue.key}: ${issue.reason}`);

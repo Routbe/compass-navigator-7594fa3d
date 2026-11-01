@@ -11,6 +11,8 @@ import { formatDateTime } from "@/lib/format";
 import { logQuietly, notifyError } from "@/lib/notify";
 import { downloadCsv, toCsv } from "@/lib/csv";
 import { cn } from "@/lib/utils";
+import { ContactTriagePanel } from "@/components/admin/ContactTriagePanel";
+import { myAdminPermissions } from "@/lib/admin-access.functions";
 
 type Row = {
   id: string;
@@ -57,6 +59,14 @@ export default function AdminContact() {
   const [to, setTo] = useState("");
   const [selected, setSelected] = useState<Row | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const fetchAccess = useServerFn(myAdminPermissions);
+  const [fullAdmin, setFullAdmin] = useState(false);
+  const [accessLoaded, setAccessLoaded] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void fetchAccess().then(access => { if (active) setFullAdmin(access.fullAdmin); }).catch(() => {}).finally(() => { if (active) setAccessLoaded(true); });
+    return () => { active = false; };
+  }, [fetchAccess]);
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -81,8 +91,8 @@ export default function AdminContact() {
   }, [fetchRows, status, search, from, to, t]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (fullAdmin) void load();
+  }, [load, fullAdmin]);
 
   const statusLabel = useCallback((value: string) => t(`admin.contact.status.${value}`), [t]);
 
@@ -119,7 +129,7 @@ export default function AdminContact() {
             <h1 className="font-display text-2xl text-foreground">{t("admin.contact.title")}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{t("admin.contact.subtitle")}</p>
           </div>
-          <div className="flex gap-2">
+          {fullAdmin && <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => void load()} disabled={refreshing}>
               {refreshing ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
@@ -132,8 +142,12 @@ export default function AdminContact() {
               <Download className="mr-2 h-4 w-4" aria-hidden />
               {t("admin.contact.export")}
             </Button>
-          </div>
+          </div>}
         </header>
+
+        <ContactTriagePanel />
+
+        {accessLoaded && fullAdmin && <>
 
         <div className="flex flex-wrap items-center gap-2">
           {FILTERS.map((f) => (
@@ -229,6 +243,7 @@ export default function AdminContact() {
             </table>
           )}
         </div>
+        </>}
       </div>
 
       <Dialog open={selected !== null} onOpenChange={(open) => !open && setSelected(null)}>
@@ -242,6 +257,7 @@ export default function AdminContact() {
                 {selected.name} · {selected.email} · {formatDateTime(selected.created_at, locale)}
               </p>
               <StatusChip status={selected.status} label={statusLabel(selected.status)} />
+              <ContactTriagePanel key={selected.id} initialMessage={`${selected.subject}\n\n${selected.message}`} />
               <p className="whitespace-pre-line rounded-xl border border-border bg-muted/30 p-4">
                 {selected.message}
               </p>

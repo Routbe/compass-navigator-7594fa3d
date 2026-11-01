@@ -3,13 +3,13 @@ import { docs, docHead, docStructuredData, getDoc } from "@/lib/docs-catalog";
 import { PRIMARY_PAYMENT_IDS, qrTypeCategories, allQrTypes } from "@/components/QRTypeSelector";
 import { mmToPx } from "@/components/DPISelector";
 import { qrGuidePath } from "@/lib/qr-guide-path";
-it("excludes Steam from both selectable QR catalogs", () => {
-  expect(allQrTypes.some(type => type.id === "steam")).toBe(false);
-  expect(qrTypeCategories.find(c => c.id === "link")?.types.map(t => t.id)).toEqual(["url", "app", "social"]);
+it("restores Steam in both selectable QR catalogs", () => {
+  expect(allQrTypes.some(type => type.id === "steam")).toBe(true);
+  expect(qrTypeCategories.find(c => c.id === "link")?.types.map(t => t.id)).toEqual(["url", "app", "social", "steam"]);
 });
-it("keeps the primary payment category limited to the requested four", () => {
+it("restores all payment choices without an extra expansion", () => {
   expect(PRIMARY_PAYMENT_IDS).toEqual(["iban", "wero", "paypal", "crypto"]);
-  expect(qrTypeCategories.find(c => c.id === "payment")?.types.map(t => t.id)).toEqual(["iban", "wero", "paypal", "crypto"]);
+  expect(qrTypeCategories.find(c => c.id === "payment")?.types.map(t => t.id)).toEqual(["iban", "wero", "bancontact", "payconiq", "paypal", "venmo", "cashapp", "pix", "alipay", "wechat", "crypto"]);
 });
 it("maps supported QR types to actual canonical documents", () => {
   for (const type of ["iban", "wero", "paypal", "crypto", "vcard", "whatsapp", "email", "sms", "pdf", "image", "wifi", "event", "maps"]) expect(getDoc(qrGuidePath(type) ?? "")).toBeDefined();
